@@ -14,6 +14,9 @@ import { authenticateUser } from "./middleware/authMiddleware.js";
 import cookieParser from "cookie-parser";
 import cloudinary from "cloudinary";
 
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
+
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -28,6 +31,9 @@ cloudinary.config({
 
 app.use(cookieParser());
 app.use(express.json());
+
+app.use(helmet());
+app.use(mongoSanitize());
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

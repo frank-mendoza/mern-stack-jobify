@@ -1,39 +1,52 @@
-import { Form, redirect, useLoaderData, useNavigation } from "react-router-dom";
+import { Form, redirect, useLoaderData } from "react-router-dom";
 import { JOB_STATUS, JOB_TYPE } from "../../../utils/constants";
-import { FormRow, FormRowSelect } from "../components";
+import { FormRow, FormRowSelect, SubmitBtn } from "../components";
 import { toast } from "react-toastify";
 import customFetch from "../utils/customFetch";
 import Wrapper from "../assets/wrappers/DashboardFormPage";
+import { useQuery } from "@tanstack/react-query";
 
-export const action = async ({ request, params }) => {
+const singleJobQuery = (id) => {
+  return {
+    queryKey: ["job", id],
+    queryFn: async () => {
+      const { data } = await customFetch.get(`/jobs/${id}`);
+      return data;
+    },
+  };
+};
+
+export const loader = (queryClient) => async ({ params }) => {
+  try {
+    await queryClient.ensureQueryData(singleJobQuery(params.id));
+    return params.id;
+  } catch (error) {
+    toast.error(error?.response?.data?.msg);
+    return redirect("/dashboard/all-jobs");
+  }
+};
+
+export const action = (queryClient) => async ({ request, params }) => {
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
-
   try {
     await customFetch.patch(`/jobs/${params.id}`, data);
+    queryClient.invalidateQueries(["jobs"]);
+
     toast.success("Job edited successfully");
     return redirect("/dashboard/all-jobs");
   } catch (error) {
-    toast.error(error.response.data.msg);
+    toast.error(error?.response?.data?.msg);
     return error;
   }
 };
 
-export const loader = async ({ params }) => {
-  try {
-    const { data } = await customFetch.get(`/jobs/${params.id}`);
-    return data;
-  } catch (error) {
-    toast.error(error.response.data.msg);
-    return redirect("/dashboard/all-jobs");
-  }
-};
-
 const EditJob = () => {
-  const { job } = useLoaderData();
+  const id = useLoaderData();
 
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === "submitting";
+  const {
+    data: { job },
+  } = useQuery(singleJobQuery(id));
 
   return (
     <Wrapper>
@@ -61,13 +74,7 @@ const EditJob = () => {
             defaultValue={job.jobType}
             list={Object.values(JOB_TYPE)}
           />
-          <button
-            type="submit"
-            className="btn btn-block form-btn "
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "submitting..." : "submit"}
-          </button>
+          <SubmitBtn formBtn />
         </div>
       </Form>
     </Wrapper>

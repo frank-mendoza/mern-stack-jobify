@@ -10,4 +10,4 @@ export { default as SearchContainer } from "./SearchContainer";
 export { default as SubmitBtn } from "./SubmitBtn";
 export { default as ChartsContainer } from "./ChartsContainer";
 export { default as StatsContainer } from "./StatsContainer";
-// export { default as Loading } from './Loading';
+export { default as Loading } from "./Loading";
